@@ -967,6 +967,14 @@ export default function Home() {
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </div>
                           </div>
+                          {(ad.ads_count || ad.details) && (
+                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                              {ad.ads_count && parseInt(ad.ads_count) > 0 ? (
+                                <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-semibold text-[11px]">{ad.ads_count} {parseInt(ad.ads_count) === 1 ? 'Ad' : 'Ads'}</span>
+                              ) : <span />}
+                              {ad.details && <span className="truncate max-w-[200px] text-slate-400 text-[11px]">{ad.details}</span>}
+                            </div>
+                          )}
                         </div>
                       ))}
                     {advertisements.filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase())).length === 0 && adSearch && (
@@ -981,6 +989,8 @@ export default function Home() {
                         <tr>
                           <th className="px-5 py-3 font-semibold text-slate-500 w-12">Sr.</th>
                           <th className="px-5 py-3 font-semibold text-slate-500">Email</th>
+                          <th className="px-5 py-3 font-semibold text-slate-500">Active Ads</th>
+                          <th className="px-5 py-3 font-semibold text-slate-500">Extra Details / Notes</th>
                           <th className="px-5 py-3 font-semibold text-slate-500">Date Added</th>
                           <th className="px-5 py-3 font-semibold text-slate-500 text-center">Status</th>
                         </tr>
@@ -995,7 +1005,22 @@ export default function Home() {
                             className="hover:bg-[#f5c518]/5 cursor-pointer transition-colors"
                           >
                             <td className="px-5 py-3.5 text-slate-400 font-medium">{idx + 1}</td>
-                            <td className="px-5 py-3.5 text-slate-900 font-medium">{ad.title}</td>
+                            <td className="px-5 py-3.5 text-slate-900 font-medium">
+                              <div>{ad.title}</div>
+                              {ad.full_name && <div className="text-xs text-slate-400 font-normal">{ad.full_name}</div>}
+                            </td>
+                            <td className="px-5 py-3.5 text-slate-700">
+                              {ad.ads_count && parseInt(ad.ads_count) > 0 ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                  {ad.ads_count} {parseInt(ad.ads_count) === 1 ? 'Ad' : 'Ads'}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-xs">—</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3.5 text-slate-600 text-xs max-w-xs truncate">
+                              {ad.details ? ad.details : <span className="text-slate-400">—</span>}
+                            </td>
                             <td className="px-5 py-3.5 text-slate-500">
                               {new Date(ad.created_at).toLocaleDateString('en-GB')}
                             </td>
@@ -1015,7 +1040,7 @@ export default function Home() {
                           </tr>
                         ))}
                         {advertisements.filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase())).length === 0 && adSearch && (
-                          <tr><td colSpan={4} className="text-center text-slate-400 text-sm py-8">No results for "{adSearch}"</td></tr>
+                          <tr><td colSpan={6} className="text-center text-slate-400 text-sm py-8">No results for "{adSearch}"</td></tr>
                         )}
                       </tbody>
                     </table>
