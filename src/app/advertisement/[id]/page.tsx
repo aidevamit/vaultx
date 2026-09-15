@@ -21,7 +21,7 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
   const [countryCode, setCountryCode] = useState('91');
   const [phoneText, setPhoneText] = useState('');
   const [adsCount, setAdsCount] = useState('0');
-  const [subAds, setSubAds] = useState<{adId: string, title: string}[]>([]);
+  const [subAds, setSubAds] = useState<{adId: string, title: string, adDate?: string}[]>([]);
   const [cardsCount, setCardsCount] = useState('0');
   const [savedCards, setSavedCards] = useState<{last4: string, expiry: string}[]>([]);
   const [detailsText, setDetailsText] = useState('');
@@ -486,12 +486,13 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
               </span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left min-w-[340px]">
+              <table className="w-full text-xs text-left min-w-[400px]">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider">
                   <tr>
                     <th className="px-4 sm:px-5 py-3 w-10 text-center">#</th>
-                    <th className="px-4 sm:px-5 py-3 w-36 font-bold">Ad ID</th>
+                    <th className="px-4 sm:px-5 py-3 w-32 font-bold">Ad ID</th>
                     <th className="px-4 sm:px-5 py-3 font-bold">Ad Title</th>
+                    <th className="px-4 sm:px-5 py-3 w-36 font-bold">Ad Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -500,6 +501,9 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
                       <td className="px-4 sm:px-5 py-3 text-slate-400 font-mono text-center">{idx + 1}</td>
                       <td className="px-4 sm:px-5 py-3 text-slate-800 font-mono font-bold bg-slate-50/50">{sa.adId || '—'}</td>
                       <td className="px-4 sm:px-5 py-3 text-slate-900 font-semibold">{sa.title || 'Untitled Ad'}</td>
+                      <td className="px-4 sm:px-5 py-3 text-slate-700 font-mono">
+                        {sa.adDate ? (sa.adDate.includes('-') ? sa.adDate.split('-').reverse().join('-') : sa.adDate) : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -545,18 +549,27 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-        {/* Extra Description Panel */}
-        {ad.details && (
-          <div className="bg-white border border-slate-200 shadow-sm">
-            <div className="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+        {/* Extra Description & Notes Panel - Always Visible */}
+        <div className="bg-white border border-slate-200 shadow-sm">
+          <div className="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <div className="w-1 h-4 bg-slate-400"></div>
-              <h2 className="text-xs font-bold text-slate-600 uppercase tracking-widest">Additional Description & Notes</h2>
+              <h2 className="text-xs font-bold text-slate-600 uppercase tracking-widest">Additional Description & Extra Details</h2>
             </div>
-            <div className="p-4 sm:p-5 text-slate-700 text-xs leading-relaxed whitespace-pre-wrap bg-slate-50/30">
-              {ad.details}
-            </div>
+            <button
+              onClick={() => {
+                setDetailsModalStep(9);
+                setIsAddingDetails(true);
+              }}
+              className="text-xs text-[#a88200] font-bold uppercase tracking-wider hover:underline"
+            >
+              {ad.details ? 'Edit Extra Details' : 'Add Extra Details'}
+            </button>
           </div>
-        )}
+          <div className="p-4 sm:p-5 text-slate-700 text-xs leading-relaxed whitespace-pre-wrap bg-slate-50/30">
+            {ad.details ? ad.details : <span className="text-slate-400 italic">No additional description or extra details added yet. Click 'Add Extra Details' to add notes.</span>}
+          </div>
+        </div>
 
         {/* Credentials History Table */}
         {safeParseJson(ad.credentials_history_json).length > 0 && (
@@ -768,7 +781,7 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
                          const maxCount = Math.min(count, 50);
                          const newSubAds = [...subAds];
                          if (newSubAds.length < maxCount) {
-                           while(newSubAds.length < maxCount) newSubAds.push({adId: '', title: ''});
+                           while(newSubAds.length < maxCount) newSubAds.push({adId: '', title: '', adDate: ''});
                          } else if (newSubAds.length > maxCount) {
                            newSubAds.length = maxCount;
                          }
@@ -790,6 +803,12 @@ export default function AdvertisementPage({ params }: { params: Promise<{ id: st
                            <input type="text" required placeholder="Ad Title" value={sa.title} onChange={e => {
                              const newAds = [...subAds]; newAds[idx].title = e.target.value; setSubAds(newAds);
                            }} className="w-full bg-white border border-slate-300 px-2 py-1.5 text-xs outline-none"/>
+                           <div className="flex items-center gap-2">
+                             <span className="text-[10px] font-bold text-slate-500 uppercase shrink-0">Ad Date:</span>
+                             <input type="date" value={sa.adDate || ''} onChange={e => {
+                               const newAds = [...subAds]; newAds[idx].adDate = e.target.value; setSubAds(newAds);
+                             }} className="w-full bg-white border border-slate-300 px-2 py-1.5 text-xs outline-none"/>
+                           </div>
                          </div>
                        ))}
                      </div>

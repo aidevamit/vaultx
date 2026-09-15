@@ -878,7 +878,7 @@ export default function Home() {
           )}
 
           {activeTab === 'advertisements' && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-8 flex flex-col h-full">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-8 flex flex-col mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">Advertisements</h2>
