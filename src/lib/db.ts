@@ -7,11 +7,14 @@ const globalForSql = globalThis as unknown as {
 
 function getSql(): postgres.Sql {
   if (!globalForSql.sql) {
-    if (!process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
-      console.warn('DATABASE_URL is missing during build context.');
-    }
     const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/dummy';
-    globalForSql.sql = postgres(connectionString, { ssl: 'require' });
+    const isDummy = !process.env.DATABASE_URL;
+    globalForSql.sql = postgres(connectionString, { 
+      ssl: isDummy ? false : 'require',
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10
+    });
   }
   return globalForSql.sql;
 }
