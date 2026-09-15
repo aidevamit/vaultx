@@ -1,46 +1,46 @@
-import postgres from 'postgres';
+import { neon } from '@neondatabase/serverless';
+import bcryptjs from 'bcryptjs';
 
 const globalForSql = globalThis as unknown as {
-  sql: postgres.Sql | undefined;
+  sql: any | undefined;
   isInitialized: boolean | undefined;
 };
 
-function getSql(): postgres.Sql {
+function getSql() {
   if (!globalForSql.sql) {
-    const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/dummy';
-    const isDummy = !process.env.DATABASE_URL;
-    globalForSql.sql = postgres(connectionString, { 
-      ssl: isDummy ? false : 'require',
-      max: 10,
-      idle_timeout: 20,
-      connect_timeout: 10
-    });
+    const connStr = process.env.DATABASE_URL || 'postgresql://localhost:5432/dummy';
+    const queryClient = neon(connStr);
+
+    const proxyClient = function (strings: TemplateStringsArray, ...values: any[]) {
+      return queryClient(strings, ...values);
+    };
+
+    proxyClient.unsafe = function (queryStr: string) {
+      return queryClient.query(queryStr);
+    };
+
+    globalForSql.sql = proxyClient;
   }
   return globalForSql.sql;
 }
 
-export const sql = new Proxy({} as postgres.Sql, {
+export const sql = new Proxy((() => {}) as any, {
   get(_target, prop) {
-    const instance = getSql() as any;
+    const instance = getSql();
     const value = instance[prop];
     return typeof value === 'function' ? value.bind(instance) : value;
   },
   apply(_target, _thisArg, argArray) {
-    const instance = getSql() as any;
+    const instance = getSql();
     return instance(...argArray);
   }
 });
-
-if (process.env.NODE_ENV !== 'production') globalForSql.sql = globalForSql.sql;
-
-import bcryptjs from 'bcryptjs';
 
 // Helper function to initialize our table
 export async function initDb() {
   if (globalForSql.isInitialized) return;
   globalForSql.isInitialized = true;
   
-  // Execute all table creation and column addition in a single round-trip to speed up load times
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS records (
       id SERIAL PRIMARY KEY,
@@ -106,4 +106,3 @@ export async function initDb() {
     `;
   }
 }
-
