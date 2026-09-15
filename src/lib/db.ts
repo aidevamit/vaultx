@@ -1,17 +1,34 @@
 import postgres from 'postgres';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is missing');
-}
-
 const globalForSql = globalThis as unknown as {
   sql: postgres.Sql | undefined;
   isInitialized: boolean | undefined;
 };
 
-export const sql = globalForSql.sql ?? postgres(process.env.DATABASE_URL, { ssl: 'require' });
+function getSql(): postgres.Sql {
+  if (!globalForSql.sql) {
+    if (!process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+      console.warn('DATABASE_URL is missing during build context.');
+    }
+    const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/dummy';
+    globalForSql.sql = postgres(connectionString, { ssl: 'require' });
+  }
+  return globalForSql.sql;
+}
 
-if (process.env.NODE_ENV !== 'production') globalForSql.sql = sql;
+export const sql = new Proxy({} as postgres.Sql, {
+  get(_target, prop) {
+    const instance = getSql() as any;
+    const value = instance[prop];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+  apply(_target, _thisArg, argArray) {
+    const instance = getSql() as any;
+    return instance(...argArray);
+  }
+});
+
+if (process.env.NODE_ENV !== 'production') globalForSql.sql = globalForSql.sql;
 
 import bcryptjs from 'bcryptjs';
 
