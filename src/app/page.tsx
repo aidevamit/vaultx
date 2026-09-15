@@ -245,6 +245,34 @@ export default function Home() {
   const [advertisements, setAdvertisements] = useState<any[]>([]);
   const [loadingAds, setLoadingAds] = useState(false);
   const [adSearch, setAdSearch] = useState('');
+  const [adSort, setAdSort] = useState<'newest' | 'oldest' | 'active_first' | 'expired_first' | 'ads_desc'>('newest');
+
+  const getSortedAdvertisements = () => {
+    return advertisements
+      .filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase()))
+      .sort((a, b) => {
+        if (adSort === 'newest') {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        if (adSort === 'oldest') {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+        if (adSort === 'active_first') {
+          if (a.status === b.status) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return a.status === 'active' ? -1 : 1;
+        }
+        if (adSort === 'expired_first') {
+          if (a.status === b.status) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return a.status === 'expired' ? -1 : 1;
+        }
+        if (adSort === 'ads_desc') {
+          const countA = parseInt(a.ads_count || '0', 10);
+          const countB = parseInt(b.ads_count || '0', 10);
+          return countB - countA;
+        }
+        return 0;
+      });
+  };
 
   useEffect(() => {
     if (activeTab === 'advertisements') {
@@ -898,25 +926,47 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Search Bar */}
+              {/* Search & Sort Controls Bar */}
               {advertisements.length > 0 && (
-                <div className="relative mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                  <input
-                    type="text"
-                    value={adSearch}
-                    onChange={e => setAdSearch(e.target.value)}
-                    placeholder="Search by email..."
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#f5c518] focus:ring-1 focus:ring-[#f5c518] transition-all"
-                  />
-                  {adSearch && (
-                    <button onClick={() => setAdSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                  )}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+                  {/* Search Bar */}
+                  <div className="relative flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input
+                      type="text"
+                      value={adSearch}
+                      onChange={e => setAdSearch(e.target.value)}
+                      placeholder="Search by email..."
+                      className="w-full pl-10 pr-8 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-[#f5c518] focus:ring-1 focus:ring-[#f5c518] transition-all"
+                    />
+                    {adSearch && (
+                      <button onClick={() => setAdSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sort Filter Dropdown */}
+                  <div className="flex items-center gap-2 shrink-0 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 shrink-0">
+                      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Sort By:</span>
+                    <select
+                      value={adSort}
+                      onChange={(e: any) => setAdSort(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer pr-1"
+                    >
+                      <option value="newest">Newest to Oldest (Default)</option>
+                      <option value="oldest">Oldest to Newest</option>
+                      <option value="active_first">Status: Active First</option>
+                      <option value="expired_first">Status: Expired First</option>
+                      <option value="ads_desc">Most Active Ads First</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
@@ -934,9 +984,7 @@ export default function Home() {
                 <div className="mt-2">
                   {/* Mobile Cards */}
                   <div className="sm:hidden space-y-3">
-                    {advertisements
-                      .filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase()))
-                      .map((ad: any, idx: number) => (
+                    {getSortedAdvertisements().map((ad: any, idx: number) => (
                         <div
                           key={ad.id}
                           onClick={() => router.push(`/advertisement/${ad.id}`)}
@@ -977,7 +1025,7 @@ export default function Home() {
                           )}
                         </div>
                       ))}
-                    {advertisements.filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase())).length === 0 && adSearch && (
+                    {getSortedAdvertisements().length === 0 && adSearch && (
                       <p className="text-center text-slate-400 text-sm py-8">No results for "{adSearch}"</p>
                     )}
                   </div>
@@ -996,9 +1044,7 @@ export default function Home() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white">
-                        {advertisements
-                          .filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase()))
-                          .map((ad: any, idx: number) => (
+                        {getSortedAdvertisements().map((ad: any, idx: number) => (
                           <tr
                             key={ad.id}
                             onClick={() => router.push(`/advertisement/${ad.id}`)}
