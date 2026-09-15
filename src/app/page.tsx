@@ -248,8 +248,17 @@ export default function Home() {
   const [adSort, setAdSort] = useState<'newest' | 'oldest' | 'active_first' | 'expired_first' | 'ads_desc'>('newest');
 
   const getSortedAdvertisements = () => {
+    const query = adSearch.toLowerCase().trim();
     return advertisements
-      .filter(ad => ad.title?.toLowerCase().startsWith(adSearch.toLowerCase()))
+      .filter(ad => {
+        if (!query) return true;
+        const titleMatch = ad.title?.toLowerCase().includes(query);
+        const nameMatch = ad.full_name?.toLowerCase().includes(query);
+        const detailsMatch = ad.details?.toLowerCase().includes(query);
+        const subAdsMatch = ad.sub_ads_json?.toLowerCase().includes(query);
+        const phoneMatch = ad.phone?.toLowerCase().includes(query);
+        return titleMatch || nameMatch || detailsMatch || subAdsMatch || phoneMatch;
+      })
       .sort((a, b) => {
         if (adSort === 'newest') {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
