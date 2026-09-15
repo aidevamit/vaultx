@@ -24,15 +24,17 @@ function getSql() {
   return globalForSql.sql;
 }
 
-export function sql(strings: TemplateStringsArray, ...values: any[]) {
+function _sqlFn(strings: TemplateStringsArray, ...values: any[]) {
   const instance = getSql();
   return instance(strings, ...values);
 }
 
-(sql as any).unsafe = function (queryStr: string) {
-  const instance = getSql();
-  return instance.unsafe(queryStr);
-};
+export const sql = Object.assign(_sqlFn, {
+  unsafe(queryStr: string) {
+    const instance = getSql();
+    return instance.unsafe(queryStr);
+  },
+});
 
 // Helper function to initialize our table
 export async function initDb() {
