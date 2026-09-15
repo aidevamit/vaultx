@@ -24,17 +24,15 @@ function getSql() {
   return globalForSql.sql;
 }
 
-export const sql = new Proxy((() => {}) as any, {
-  get(_target, prop) {
-    const instance = getSql();
-    const value = instance[prop];
-    return typeof value === 'function' ? value.bind(instance) : value;
-  },
-  apply(_target, _thisArg, argArray) {
-    const instance = getSql();
-    return instance(...argArray);
-  }
-});
+export function sql(strings: TemplateStringsArray, ...values: any[]) {
+  const instance = getSql();
+  return instance(strings, ...values);
+}
+
+(sql as any).unsafe = function (queryStr: string) {
+  const instance = getSql();
+  return instance.unsafe(queryStr);
+};
 
 // Helper function to initialize our table
 export async function initDb() {
